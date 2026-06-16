@@ -49,14 +49,14 @@ jobs:
       - name: Build
         run: cargo build --release --target ${{ matrix.target }}
 
-      - name: Upload Binary
+      - name: Rename Binary
         run: |
           mkdir -p dist
           cp target/${{ matrix.target }}/release/ppdrop${{ matrix.suffix }} dist/ppdrop-${{ matrix.target }}${{ matrix.suffix }}
       - uses: actions/upload-artifact@v4
         with:
-          name: binaries
-          path: dist/*
+          name: ppdrop-${{ matrix.target }}
+          path: dist/ppdrop-${{ matrix.target }}${{ matrix.suffix }}
           if-no-files-found: error
 
   release:
@@ -65,7 +65,7 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
-          name: binaries
+          merge-multiple: true
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
