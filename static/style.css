@@ -363,7 +363,9 @@ h2 {
     word-break: break-all;
     max-height: 60px;
     overflow-y: auto;
+    cursor: pointer;
 }
+.toast-body:hover { color: #bbb; }
 
 .toast-actions {
     margin-top: 10px;

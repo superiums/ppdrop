@@ -1,6 +1,34 @@
 (function () {
     'use strict';
 
+    function copyToClipboard(text) {
+        return new Promise(function (resolve, reject) {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(resolve).catch(function () {
+                    fallbackCopy(text, resolve, reject);
+                });
+            } else {
+                fallbackCopy(text, resolve, reject);
+            }
+        });
+    }
+
+    function fallbackCopy(text, resolve, reject) {
+        try {
+            var ta = document.createElement('textarea');
+            ta.value = text;
+            ta.style.position = 'fixed';
+            ta.style.opacity = '0';
+            ta.style.left = '-9999px';
+            document.body.appendChild(ta);
+            ta.focus();
+            ta.select();
+            var ok = document.execCommand('copy');
+            document.body.removeChild(ta);
+            if (ok) { resolve(); } else { reject(); }
+        } catch (e) { reject(e); }
+    }
+
     const RTC_CONFIG = {
         iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
     };
@@ -208,14 +236,6 @@
 
             if (msg.type === 'text') {
                 showToast('\u{1F4CB}', t('toast.text_from', { name: pName }), msg.data, pName);
-                try {
-                    var cp = navigator.clipboard.writeText(msg.data);
-                    if (cp && cp.then) {
-                        cp.then(function () {
-                            el('toast-title').textContent = t('toast.copied_from', { name: pName });
-                        }).catch(function () {});
-                    }
-                } catch (e) {}
                 addLog(t('log.text_received', { name: pName }));
                 return;
             }
@@ -508,14 +528,18 @@
         var copyBtn = el('toast-copy');
         if (peerName) {
             copyBtn.style.display = '';
-            copyBtn.onclick = function () {
-                navigator.clipboard.writeText(body).then(function () {
+            function doCopy() {
+                copyToClipboard(body).then(function () {
                     copyBtn.textContent = '\u2713';
+                    el('toast-title').textContent = t('toast.copied_from', { name: peerName });
                     setTimeout(function () { copyBtn.textContent = t('toast.copy'); }, 2000);
                 }).catch(function () {});
-            };
+            }
+            copyBtn.onclick = doCopy;
+            el('toast-body').onclick = doCopy;
         } else {
             copyBtn.style.display = 'none';
+            el('toast-body').onclick = null;
         }
 
         var progress = el('toast-progress');
