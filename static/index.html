@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1.0, user-scalable=no"
+        />
+        <title data-lang="ui.title">ppDrop</title>
+        <link rel="stylesheet" href="static/style.css" />
+    </head>
+    <body>
+        <div class="container">
+            <header>
+                <div class="header-top">
+                    <h1 data-lang="ui.title">ppDrop</h1>
+                    <div class="status-dot" id="status-dot"></div>
+                </div>
+                <div class="device-info">
+                    <span id="device-icon" class="device-icon-small"></span>
+                    <span
+                        id="device-name"
+                        class="device-name-clk"
+                        onclick="window._editName()"
+                        title="Click to rename"
+                    ></span>
+                    <span id="status" class="status-inline disconnected"></span>
+                </div>
+            </header>
+
+            <main>
+                <section class="section">
+                    <div class="section-header">
+                        <h2 data-lang="section.devices">Devices</h2>
+                        <span class="peer-count" id="peer-count">0</span>
+                    </div>
+                    <div id="peer-list" class="peer-list">
+                        <div class="empty-state" id="empty-state">
+                            <div class="empty-icon">🖥️</div>
+                            <div class="empty-text" data-lang="device.none">
+                                No devices yet
+                            </div>
+                            <div class="empty-hint" data-lang="device.hint">
+                                Open this page on another device on the same
+                                network
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <div class="section-header">
+                        <h2 data-lang="section.activity">Activity</h2>
+                    </div>
+                    <div id="log" class="log">
+                        <div class="log-empty" data-lang="activity.none">
+                            Waiting for activity...
+                        </div>
+                    </div>
+                </section>
+            </main>
+        </div>
+
+        <div id="file-modal" class="modal-overlay hidden">
+            <div class="modal">
+                <div class="modal-icon">📁</div>
+                <h3 data-lang="file.title">Incoming File Transfer</h3>
+                <p id="modal-sender" class="modal-detail"></p>
+                <p id="modal-fileinfo" class="modal-detail"></p>
+                <p id="modal-filesize" class="modal-detail"></p>
+                <div class="modal-actions">
+                    <button
+                        id="modal-reject"
+                        class="btn btn-modal btn-reject"
+                        data-lang="file.reject"
+                    >
+                        Reject
+                    </button>
+                    <button
+                        id="modal-accept"
+                        class="btn btn-modal btn-accept"
+                        data-lang="file.accept"
+                    >
+                        Accept & Download
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="text-modal" class="modal-overlay hidden">
+            <div class="modal modal-text">
+                <h3 id="text-modal-title">Send text</h3>
+                <textarea
+                    id="text-modal-input"
+                    class="modal-textarea"
+                    placeholder="Type or paste text here..."
+                ></textarea>
+                <div class="modal-text-actions">
+                    <button
+                        id="text-modal-clipboard"
+                        class="btn btn-modal btn-clipboard"
+                        data-lang="text.read_clipboard"
+                    >
+                        📋 Read Clipboard
+                    </button>
+                </div>
+                <div class="modal-actions">
+                    <button
+                        id="text-modal-cancel"
+                        class="btn btn-modal btn-cancel"
+                        data-lang="text.cancel"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        id="text-modal-submit"
+                        class="btn btn-modal btn-accept"
+                        data-lang="text.send"
+                    >
+                        Send
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="toast" class="toast hidden">
+            <div class="toast-inner">
+                <div class="toast-header">
+                    <span id="toast-icon">📋</span>
+                    <span id="toast-title">Text received</span>
+                    <button class="toast-close" id="toast-close">✕</button>
+                </div>
+                <div id="toast-body" class="toast-body"></div>
+                <div class="toast-actions">
+                    <button
+                        id="toast-copy"
+                        class="toast-btn"
+                        data-lang="toast.copy"
+                    >
+                        Copy
+                    </button>
+                </div>
+                <div class="toast-progress" id="toast-progress"></div>
+            </div>
+        </div>
+
+        <script src="static/lang.js"></script>
+        <script src="static/app.js"></script>
+    </body>
+</html>

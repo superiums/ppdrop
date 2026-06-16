@@ -1,0 +1,91 @@
+name: Release
+
+on:
+  push:
+    tags: [ 'v*' ]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
+            suffix: ''
+          - target: x86_64-unknown-linux-musl
+            os: ubuntu-latest
+            suffix: ''
+          - target: x86_64-pc-windows-gnu
+            os: ubuntu-latest
+            suffix: .exe
+          - target: x86_64-apple-darwin
+            os: macos-13
+            suffix: ''
+          - target: aarch64-apple-darwin
+            os: macos-latest
+            suffix: ''
+
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install cross-compile dependencies (Windows)
+        if: contains(matrix.target, 'windows')
+        run: sudo apt-get update && sudo apt-get install -y mingw-w64
+
+      - name: Install musl dependencies
+        if: contains(matrix.target, 'musl')
+        run: sudo apt-get update && sudo apt-get install -y musl-tools
+
+      - name: Setup Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          target: ${{ matrix.target }}
+
+      - name: Build
+        run: cargo build --release --target ${{ matrix.target }}
+
+      - name: Package (Unix)
+        if: "!contains(matrix.target, 'windows')"
+        run: |
+          mkdir -p dist/ppdrop-${{ matrix.target }}
+          cp target/${{ matrix.target }}/release/ppdrop${{ matrix.suffix }} dist/ppdrop-${{ matrix.target }}/
+          cp -r static dist/ppdrop-${{ matrix.target }}/
+          cd dist
+          tar czf ppdrop-${{ matrix.target }}.tar.gz ppdrop-${{ matrix.target }}
+
+      - name: Package (Windows)
+        if: contains(matrix.target, 'windows')
+        run: |
+          mkdir -p dist/ppdrop-${{ matrix.target }}
+          cp target/${{ matrix.target }}/release/ppdrop${{ matrix.suffix }} dist/ppdrop-${{ matrix.target }}/
+          cp -r static dist/ppdrop-${{ matrix.target }}/
+          cd dist
+          7z a ppdrop-${{ matrix.target }}.zip ppdrop-${{ matrix.target }}
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ppdrop-${{ matrix.target }}
+          path: dist/ppdrop-${{ matrix.target }}.*
+          if-no-files-found: error
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+
+      - name: List artifacts
+        run: ls -R
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ppdrop-*/*
+          draft: true
+          generate_release_notes: true
