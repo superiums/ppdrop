@@ -2,7 +2,7 @@ name: Release
 
 on:
   push:
-    tags: [ 'v*' ]
+    tags: ["v*"]
 
 permissions:
   contents: write
@@ -15,10 +15,10 @@ jobs:
         include:
           - target: x86_64-unknown-linux-gnu
             os: ubuntu-latest
-            suffix: ''
+            suffix: "-x86_64-linux-gnu"
           - target: x86_64-unknown-linux-musl
             os: ubuntu-latest
-            suffix: ''
+            suffix: "-x86_64-linux-musl"
           - target: x86_64-pc-windows-gnu
             os: ubuntu-latest
             suffix: .exe
@@ -27,7 +27,7 @@ jobs:
           #   suffix: ''
           - target: aarch64-apple-darwin
             os: macos-latest
-            suffix: ''
+            suffix: "aarch64-apple-darwin"
 
     runs-on: ${{ matrix.os }}
     steps:
@@ -61,7 +61,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v4
-
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
