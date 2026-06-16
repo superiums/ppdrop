@@ -22,9 +22,9 @@ jobs:
           - target: x86_64-pc-windows-gnu
             os: ubuntu-latest
             suffix: .exe
-          - target: x86_64-apple-darwin
-            os: macos-13
-            suffix: ''
+          # - target: x86_64-apple-darwin
+          #   os: macos-13
+          #   suffix: ''
           - target: aarch64-apple-darwin
             os: macos-latest
             suffix: ''
@@ -87,5 +87,5 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: ppdrop-*/*
-          draft: true
+          draft: false
           generate_release_notes: true

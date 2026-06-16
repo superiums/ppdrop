@@ -22,7 +22,9 @@ Inspired by [PairDrop](https://github.com/schlagmichdoch/PairDrop). No setup, no
 cargo run --release
 ```
 
-Open `http://<your-lan-ip>:8080` on any device on the same network. You'll see each other instantly.
+Open `http://<your-lan-ip>:8080` on any device on the same network (or specify a custom port: `ppdrop 9090`).
+
+On startup, the terminal displays a QR code for each LAN IP — scan it with your phone to open the page instantly.
 
 ## Usage
 
@@ -33,7 +35,18 @@ Open `http://<your-lan-ip>:8080` on any device on the same network. You'll see e
 | **Send file** | Click `Send File` on a peer → select a file → receiver gets a confirmation dialog |
 | **Receive text** | Text appears in a toast notification and is auto-copied |
 | **Receive file** | Click `Accept & Download` to start receiving |
-| **Change device name** | Click `edit` next to the device name |
+| **Change device name** | Click the device name to edit |
+
+## CLI
+
+```
+ppdrop [PORT]
+```
+
+| Argument | Description |
+|---|---|
+| `PORT` | Port to listen on (default: `8080`) |
+| `-h`, `--help` | Print help message |
 
 ## Build from Source
 
@@ -41,13 +54,34 @@ Open `http://<your-lan-ip>:8080` on any device on the same network. You'll see e
 git clone https://github.com/your-username/ppdrop
 cd ppdrop
 cargo build --release
-./target/release/ppdrop
+./target/release/ppdrop [PORT]
 ```
 
 ### Dependencies
 
 - [Rust](https://rustup.rs/) 1.75+
 - Only 4 crates: `warp`, `serde`, `serde_json`, `tokio`
+
+## Optimize Binary Size
+
+Add the following to `Cargo.toml`:
+
+```toml
+[profile.release]
+opt-level = "z"     # optimize for size
+lto = true          # link-time optimization
+codegen-units = 1   # prevent parallel codegen (larger)
+strip = true        # strip symbols
+```
+
+Then build with:
+
+```bash
+cargo build --release
+# Stripped binary: ~3-5MB
+```
+
+For even smaller builds, use `panic = "abort"` (disables unwind tables).
 
 ## Deploy with Docker
 
