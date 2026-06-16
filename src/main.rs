@@ -1,10 +1,10 @@
+use futures_util::{SinkExt, StreamExt};
+use serde::Deserialize;
 use std::collections::HashMap;
 use std::sync::Arc;
-use tokio::sync::{RwLock, mpsc};
-use warp::Filter;
+use tokio::sync::{mpsc, RwLock};
 use warp::ws::{Message, WebSocket};
-use futures_util::{StreamExt, SinkExt};
-use serde::Deserialize;
+use warp::Filter;
 
 type Peers = Arc<RwLock<HashMap<String, PeerInfo>>>;
 
@@ -18,7 +18,11 @@ struct PeerInfo {
 #[serde(tag = "type")]
 enum ClientMessage {
     #[serde(rename = "join")]
-    Join { device_name: String, device_id: String, device_type: Option<String> },
+    Join {
+        device_name: String,
+        device_id: String,
+        device_type: Option<String>,
+    },
     #[serde(rename = "signal")]
     Signal { to: String, data: serde_json::Value },
 }
@@ -27,7 +31,9 @@ fn get_lan_ips() -> Vec<std::net::Ipv4Addr> {
     let mut ips = Vec::new();
     if let Ok(ifaces) = if_addrs::get_if_addrs() {
         for iface in &ifaces {
-            if iface.is_loopback() { continue; }
+            if iface.is_loopback() {
+                continue;
+            }
             if let if_addrs::IfAddr::V4(v4) = &iface.addr {
                 let ip = v4.ip;
                 if ip.is_private() && !ip.is_link_local() {
@@ -42,7 +48,8 @@ fn get_lan_ips() -> Vec<std::net::Ipv4Addr> {
 
 fn print_qr(url: &str) {
     if let Ok(code) = qrcode::QrCode::new(url) {
-        let qr = code.render::<qrcode::render::unicode::Dense1x2>()
+        let qr = code
+            .render::<qrcode::render::unicode::Dense1x2>()
             .dark_color(qrcode::render::unicode::Dense1x2::Dark)
             .light_color(qrcode::render::unicode::Dense1x2::Light)
             .build();
@@ -148,7 +155,21 @@ async fn main() {
         .or(ws_route)
         .with(warp::cors().allow_any_origin());
 
-    println!("  Listening on http://0.0.0.0:{}\n", port);
+    // println!("  Listening on http://0.0.0.0:{}\n", port);
+
+    let url = format!("http://localhost:{}", port);
+    std::thread::spawn(move || {
+        std::thread::sleep(std::time::Duration::from_millis(300));
+        #[cfg(target_os = "linux")]
+        let _ = std::process::Command::new("xdg-open").arg(&url).spawn();
+        #[cfg(target_os = "macos")]
+        let _ = std::process::Command::new("open").arg(&url).spawn();
+        #[cfg(target_os = "windows")]
+        let _ = std::process::Command::new("cmd")
+            .args(["/c", "start", &url])
+            .spawn();
+    });
+
     warp::serve(routes).run(([0, 0, 0, 0], port)).await;
 }
 
@@ -180,16 +201,23 @@ async fn handle_ws(ws: WebSocket, peers: Peers) {
         };
 
         match client_msg {
-            ClientMessage::Join { device_name, device_id, device_type } => {
+            ClientMessage::Join {
+                device_name,
+                device_id,
+                device_type,
+            } => {
                 let dt = device_type.clone().unwrap_or_default();
                 {
                     let mut p = peers.write().await;
                     p.remove(&device_id);
-                    p.insert(device_id.clone(), PeerInfo {
-                        device_name: device_name.clone(),
-                        device_type: dt.clone(),
-                        tx: tx.clone(),
-                    });
+                    p.insert(
+                        device_id.clone(),
+                        PeerInfo {
+                            device_name: device_name.clone(),
+                            device_type: dt.clone(),
+                            tx: tx.clone(),
+                        },
+                    );
                 }
 
                 my_id = Some(device_id.clone());
@@ -198,13 +226,16 @@ async fn handle_ws(ws: WebSocket, peers: Peers) {
 
                 let peer_list = {
                     let p = peers.read().await;
-                    let list: Vec<serde_json::Value> = p.iter()
+                    let list: Vec<serde_json::Value> = p
+                        .iter()
                         .filter(|(id, _)| *id != &device_id)
-                        .map(|(id, info)| serde_json::json!({
-                            "device_id": id,
-                            "device_name": info.device_name,
-                            "device_type": info.device_type,
-                        }))
+                        .map(|(id, info)| {
+                            serde_json::json!({
+                                "device_id": id,
+                                "device_name": info.device_name,
+                                "device_type": info.device_type,
+                            })
+                        })
                         .collect();
                     serde_json::json!({"type": "peer_list", "peers": list}).to_string()
                 };

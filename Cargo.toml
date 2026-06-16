@@ -17,3 +17,7 @@ opt-level = "z"     # optimize for size
 lto = true          # link-time optimization
 codegen-units = 1   # prevent parallel codegen (larger)
 strip = true        # strip symbols
+
+[profile.amd]
+inherits = "release"
+target-cpu = "native"
