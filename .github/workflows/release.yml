@@ -15,10 +15,10 @@ jobs:
         include:
           - target: x86_64-unknown-linux-gnu
             os: ubuntu-latest
-            suffix: "-x86_64-linux-gnu"
+            suffix: ""
           - target: x86_64-unknown-linux-musl
             os: ubuntu-latest
-            suffix: "-x86_64-linux-musl"
+            suffix: ""
           - target: x86_64-pc-windows-gnu
             os: ubuntu-latest
             suffix: .exe
@@ -27,7 +27,7 @@ jobs:
           #   suffix: ''
           - target: aarch64-apple-darwin
             os: macos-latest
-            suffix: "aarch64-apple-darwin"
+            suffix: ""
 
     runs-on: ${{ matrix.os }}
     steps:
@@ -50,10 +50,13 @@ jobs:
         run: cargo build --release --target ${{ matrix.target }}
 
       - name: Upload Binary
-        uses: actions/upload-artifact@v4
+        run: |
+          mkdir -p dist
+          cp target/${{ matrix.target }}/release/ppdrop${{ matrix.suffix }} dist/ppdrop-${{ matrix.target }}${{ matrix.suffix }}
+      - uses: actions/upload-artifact@v4
         with:
-          name: ppdrop-${{ matrix.target }}
-          path: target/${{ matrix.target }}/release/ppdrop${{ matrix.suffix }}
+          name: binaries
+          path: dist/*
           if-no-files-found: error
 
   release:
@@ -61,9 +64,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v4
+        with:
+          name: binaries
+
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          files: ppdrop-*/*
+          files: ppdrop-*
           draft: false
           generate_release_notes: true
