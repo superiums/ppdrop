@@ -2,6 +2,8 @@
 
 A lightweight **local network file & clipboard sharing** tool. Powered by Rust + WebRTC.
 
+Works with Single File.
+
 Inspired by [PairDrop](https://github.com/schlagmichdoch/PairDrop). No setup, no signup, no cloud — just open the page and share.
 
 ## Features
@@ -18,6 +20,7 @@ Inspired by [PairDrop](https://github.com/schlagmichdoch/PairDrop). No setup, no
 
 ```bash
 # Download the latest binary from Releases
+ppdrop
 # Or build from source:
 cargo run --release
 ```
@@ -25,6 +28,8 @@ cargo run --release
 Open `http://<your-lan-ip>:8080` on any device on the same network (or specify a custom port: `ppdrop 9090`).
 
 On startup, the terminal displays a QR code for each LAN IP — scan it with your phone to open the page instantly.
+
+languages: English and Chinese.
 
 ## Usage
 
@@ -55,39 +60,6 @@ git clone https://github.com/your-username/ppdrop
 cd ppdrop
 cargo build --release
 ./target/release/ppdrop [PORT]
-```
-
-### Dependencies
-
-- [Rust](https://rustup.rs/) 1.75+
-- Only 4 crates: `warp`, `serde`, `serde_json`, `tokio`
-
-## Optimize Binary Size
-
-Add the following to `Cargo.toml`:
-
-```toml
-[profile.release]
-opt-level = "z"     # optimize for size
-lto = true          # link-time optimization
-codegen-units = 1   # prevent parallel codegen (larger)
-strip = true        # strip symbols
-```
-
-Then build with:
-
-```bash
-cargo build --release
-# Stripped binary: ~3-5MB
-```
-
-For even smaller builds, use `panic = "abort"` (disables unwind tables).
-
-## Deploy with Docker
-
-```bash
-docker build -t ppdrop .
-docker run -p 8080:8080 ppdrop
 ```
 
 ## Architecture
