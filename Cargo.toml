@@ -11,3 +11,9 @@ tokio = { version = "1", features = ["full"] }
 futures-util = "0.3"
 qrcode = "0.14"
 if-addrs = "0.12"
+
+[profile.release]
+opt-level = "z"     # optimize for size
+lto = true          # link-time optimization
+codegen-units = 1   # prevent parallel codegen (larger)
+strip = true        # strip symbols

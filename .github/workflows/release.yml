@@ -49,29 +49,11 @@ jobs:
       - name: Build
         run: cargo build --release --target ${{ matrix.target }}
 
-      - name: Package (Unix)
-        if: "!contains(matrix.target, 'windows')"
-        run: |
-          mkdir -p dist/ppdrop-${{ matrix.target }}
-          cp target/${{ matrix.target }}/release/ppdrop${{ matrix.suffix }} dist/ppdrop-${{ matrix.target }}/
-          cp -r static dist/ppdrop-${{ matrix.target }}/
-          cd dist
-          tar czf ppdrop-${{ matrix.target }}.tar.gz ppdrop-${{ matrix.target }}
-
-      - name: Package (Windows)
-        if: contains(matrix.target, 'windows')
-        run: |
-          mkdir -p dist/ppdrop-${{ matrix.target }}
-          cp target/${{ matrix.target }}/release/ppdrop${{ matrix.suffix }} dist/ppdrop-${{ matrix.target }}/
-          cp -r static dist/ppdrop-${{ matrix.target }}/
-          cd dist
-          7z a ppdrop-${{ matrix.target }}.zip ppdrop-${{ matrix.target }}
-
-      - name: Upload Artifact
+      - name: Upload Binary
         uses: actions/upload-artifact@v4
         with:
           name: ppdrop-${{ matrix.target }}
-          path: dist/ppdrop-${{ matrix.target }}.*
+          path: target/${{ matrix.target }}/release/ppdrop${{ matrix.suffix }}
           if-no-files-found: error
 
   release:
@@ -79,9 +61,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v4
-
-      - name: List artifacts
-        run: ls -R
 
       - name: Create Release
         uses: softprops/action-gh-release@v2

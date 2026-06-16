@@ -111,18 +111,40 @@ async fn main() {
 
     let peers: Peers = Arc::new(RwLock::new(HashMap::new()));
 
-    let static_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("static");
-
     let ws_route = warp::path("ws")
         .and(warp::ws())
         .and(warp::any().map(move || peers.clone()))
         .map(|ws: warp::ws::Ws, peers| ws.on_upgrade(move |s| handle_ws(s, peers)));
 
-    let index = warp::path::end().and(warp::fs::file(static_dir.join("index.html")));
-    let static_files = warp::path("static").and(warp::fs::dir(static_dir));
+    let index = warp::path::end().map(|| {
+        warp::http::Response::builder()
+            .header("content-type", "text/html; charset=utf-8")
+            .body(include_str!("../static/index.html"))
+            .unwrap()
+    });
+    let app_js = warp::path("static").and(warp::path("app.js")).map(|| {
+        warp::http::Response::builder()
+            .header("content-type", "text/javascript; charset=utf-8")
+            .body(include_str!("../static/app.js"))
+            .unwrap()
+    });
+    let style_css = warp::path("static").and(warp::path("style.css")).map(|| {
+        warp::http::Response::builder()
+            .header("content-type", "text/css; charset=utf-8")
+            .body(include_str!("../static/style.css"))
+            .unwrap()
+    });
+    let lang_js = warp::path("static").and(warp::path("lang.js")).map(|| {
+        warp::http::Response::builder()
+            .header("content-type", "text/javascript; charset=utf-8")
+            .body(include_str!("../static/lang.js"))
+            .unwrap()
+    });
 
     let routes = index
-        .or(static_files)
+        .or(app_js)
+        .or(style_css)
+        .or(lang_js)
         .or(ws_route)
         .with(warp::cors().allow_any_origin());
 
